@@ -5,7 +5,7 @@ from rest_framework.permissions import (
     IsAuthenticatedOrReadOnly,
 )
 
-from posts.models import Group, Post
+from posts.models import Comment, Follow, Group, Post
 
 from .permissions import IsAuthorOrReadOnly
 from .serializers import (
@@ -43,7 +43,7 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         post = get_object_or_404(Post, pk=self.kwargs.get("post_id"))
-        return post.comments.select_related("author", "post").all()
+        return Comment.objects.filter(post=post).select_related("author")
 
     def perform_create(self, serializer):
         post = get_object_or_404(Post, pk=self.kwargs.get("post_id"))
@@ -61,7 +61,7 @@ class FollowViewSet(
     search_fields = ("following__username",)
 
     def get_queryset(self):
-        return self.request.user.follower.select_related(
+        return Follow.objects.filter(user=self.request.user).select_related(
             "user",
             "following",
         )
